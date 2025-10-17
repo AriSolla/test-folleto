@@ -29,7 +29,16 @@ export default function CartNavbar({openDeleteCartDialog}:Props) {
         <Toolbar sx={{ justifyContent: 'space-between' }}>
             
             {/* Botón volver */}
-            <IconButton color="inherit" onClick={() => navigate('/')}>
+            <IconButton color="inherit" onClick={() => {
+                if (window.history.length > 1) {
+                    // Va a la página anterior del navegador
+                    window.history.back();
+                } else {
+                    // Si no hay historial, va al home
+                    navigate('/');
+                }
+                }}
+            >
                 <ArrowBackIcon />
             </IconButton>
 

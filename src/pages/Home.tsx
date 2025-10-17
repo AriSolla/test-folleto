@@ -8,9 +8,12 @@ import HomeFooter from "../components/HomePage/HomeFooter";
 import { Box, Pagination, Typography } from "@mui/material";
 import HomeNavbar from "../components/Navbars/HomeNavbar";
 import NotProductsFound from "../components/HomePage/NotProductsFound";
+import Popup from "../components/Popup/Popup";
 
 export default function Home() {
   const { flyer, productList, groups } = useFlyer();
+
+  const [flyerMessagePopup, setFlyerMessagePopup] = useState(false);
 
   const [drawerOpen, setDrawerOpen] = useState(false);
 
@@ -82,6 +85,18 @@ export default function Home() {
     }
   }, [filteredProducts, itemsPerPage]);
 
+ // Abrir el popup automáticamente si hay mensaje y no fue leído en esta sesión
+  useEffect(() => {
+    if (flyer.notice.active && !sessionStorage.getItem("flyerMessageRead")) {
+      setFlyerMessagePopup(true);
+    }
+  }, [flyer.notice]);
+
+  const handleClose = () => {
+    setFlyerMessagePopup(false);
+    sessionStorage.setItem("flyerMessageRead", "true"); // marcar como leído en session
+  };
+
   return (
     <Box sx={{display: "flex", flexDirection: "column", minHeight: "100vh"}}>
 
@@ -136,6 +151,11 @@ export default function Home() {
         <HomeFooter />
       </Box>
 
+      {/* Mensaje que viene del flyer */}
+      <Popup
+        open={flyerMessagePopup}
+        onClose={handleClose}
+      />
     </Box>
   );
 }

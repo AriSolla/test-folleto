@@ -1,9 +1,13 @@
-import { Grid, Box } from "@mui/material";
+import { Grid, Box, useTheme, useMediaQuery } from "@mui/material";
 import type { Group, Product } from "../../models/Flyer";
 import ProductCard from "./ProductCard/ProductCard";
 import AddtoCart from "./AddToCart";
 import ProductModal from "./ProductModal";
 import { useEffect, useState } from "react";
+import { fetchProductImage } from "../../utils/fetchProductImage";
+import { useFlyer } from "../../context/FlyerContext";
+import { readMeta } from "../../services/metaService";
+// import { readMeta } from "../../services/metaService";
 
 interface ProductGridProps {
   products: Product[];
@@ -14,57 +18,67 @@ export default function ProductGrid({
   products,
   selectedCategory,
 }: ProductGridProps) {
-  // const theme = useTheme();
-  // const isSmallScreen = useMediaQuery(theme.breakpoints.down("sm"));
+  const theme = useTheme();
+  const isSmallScreenTest = useMediaQuery(theme.breakpoints.down("sm"));
   const isSmallScreen = false;
 
   //Estados para modal
   const [openModal, setOpenModal] = useState<boolean>(false);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
-  const [selectedProductImage, setSelectedProductImage] = useState<string>("");
+  const [selectedProductImage, setSelectedProductImage] = useState<
+    string | undefined
+  >(undefined);
   const [imageLoading, setImageLoading] = useState<boolean>(true);
 
   const [fade, setFade] = useState(true);
-  const [background, setBackground] = useState(selectedCategory?.background);
+  // const [background, setBackground] = useState(selectedCategory?.background);
+
+  const { meta } = useFlyer();
+  const [background, setBackground] = useState<string | undefined>(undefined);
 
   const handleClickOpenModal = async (product: Product) => {
     setSelectedProduct(product); // Establece el producto seleccionado
     setOpenModal(true); // Abre el modal
-    fetchImage(product.productPLU);
+    await fetchImage(product.productPLU);
   };
 
+  // 🔹 Función para traer la imagen del producto
   const fetchImage = async (ean: string) => {
-    setImageLoading(true);
     try {
-      const response = await fetch(
-        `https://pf.rtitec.com.ar/image/image.php?image&ean=${ean}`
-      );
-      if (response.ok) {
-        const data = await response.json();
-        if (data.length > 0) {
-          const imagenData = data[0];
-          const base64Image = imagenData.image;
-          setSelectedProductImage(base64Image);
-        } else {
-          // console.error(`No se encontro la imagen para el codigo ${ean}`);
-        }
-      } else {
-        console.error(
-          `Error al cargar la imagen con ean ${ean}: `,
-          response.status
-        );
-      }
+      setImageLoading(true);
+
+      // Obtener el meta (usa el global si no hay local)
+      let metaData: any = await readMeta();
+      if (!metaData) metaData = meta;
+
+      // Obtener la imagen (sea de la API o del CDN)
+      const img = await fetchProductImage(ean, metaData);
+
+      if (img) setSelectedProductImage(img);
+      else console.warn(`No se encontró imagen para ${ean}`);
     } catch (error) {
-      console.error(`Error en la solicitud para el ean ${ean}:`, error);
+      console.error("Error al cargar imagen:", error);
     } finally {
       setImageLoading(false);
     }
   };
 
   useEffect(() => {
+    const fetchLogo = async () => {
+      if (!selectedCategory.background) {
+        setBackground(undefined);
+        return;
+      }
+      let metaData: any = await readMeta();
+      if (!metaData) metaData = meta;
+      const url = `${metaData.logo_image}${selectedCategory.background}`;
+      setBackground(url || "");
+    };
+
     setFade(false);
     setTimeout(() => {
-      setBackground(selectedCategory?.background);
+      fetchLogo();
+      // setBackground(selectedCategory?.background);
       setFade(true);
     }, 500);
   }, [selectedCategory]);
@@ -117,13 +131,10 @@ export default function ProductGrid({
                 paddingBottom: "25px",
               }}
             >
-              {isSmallScreen ? // <ItemCardMobileV2 product={product} cents={cents} onClick={() => handleClickOpenModal(product)} />
-              null : (
-                <ProductCard
-                  product={product}
-                  onClick={() => handleClickOpenModal(product)}
-                />
-              )}
+              <ProductCard
+                product={product}
+                onClick={() => handleClickOpenModal(product)}
+              />
               <Box sx={{ position: "absolute", bottom: 0 }}>
                 <div>
                   <AddtoCart product={product} />
@@ -140,6 +151,7 @@ export default function ProductGrid({
         product={selectedProduct}
         productImage={selectedProductImage}
         imageLoading={imageLoading}
+        isSmallScreen={isSmallScreenTest}
       />
     </>
   );

@@ -1,5 +1,7 @@
 import { Box, Typography, Divider } from "@mui/material";
 import { useCart } from "../../context/CartContext";
+import { useFlyer } from "../../context/FlyerContext";
+import { formatCurrency } from "../../utils/formatPrice";
 
 const CustomButton = {
   background: "#ffd633",
@@ -14,6 +16,14 @@ interface Props {
 
 export default function CartSummary({ openForm, isDesktop }: Props) {
   const { getTotalQuantity, getTotalPrice } = useCart();
+  const {flyer} = useFlyer()
+
+  const getDiscount = () =>{
+    return (getTotalPrice() * (1 - (flyer.notice.generalpromo.percent/100)))
+  }
+  const getAhorrado = () =>{
+    return (getTotalPrice() - getDiscount())
+  }
 
   return (
     <>
@@ -25,7 +35,7 @@ export default function CartSummary({ openForm, isDesktop }: Props) {
           backgroundColor: "#fafafa",
         }}
       >
-        <Typography variant="h6" gutterBottom>
+        <Typography variant="h6" gutterBottom fontWeight={600}>
           Resumen del pedido
         </Typography>
 
@@ -45,15 +55,49 @@ export default function CartSummary({ openForm, isDesktop }: Props) {
                 Total
               </Typography>
               <Typography variant="subtitle1" fontWeight="bold">
-                ${getTotalPrice().toFixed(0)}
+                ${formatCurrency(getTotalPrice())}
               </Typography>
             </Box>
 
-            <Box onClick={openForm} sx={{...CustomButton, textAlign:'center'}}>
+            <Box onClick={openForm} sx={{...CustomButton, textAlign:'center', cursor:'pointer'}}>
               <Typography variant="subtitle1" fontWeight="bold">Realizar pedido</Typography>
             </Box>
           </>
         )}
+      </Box>
+      <Box
+        sx={{
+          border: "1px solid #ccc",
+          borderRadius: 2,
+          padding: 3,
+          backgroundColor: "#fafafa",
+          mt:2
+        }}
+      >
+        <Typography variant="h5" gutterBottom fontWeight={600}>
+          <span style={{ color: 'white',
+                          fontSize: '150%',
+                          borderRadius: '15px',
+                          background: 'red',
+                          padding: '2%' }}>
+            {flyer.notice.generalpromo?.percent}% OFF!
+          </span>
+        </Typography>
+        <Typography variant="h5" gutterBottom fontWeight={600}>
+          pagando con {flyer.notice.generalpromo.type}
+        </Typography>
+
+        <Divider sx={{ my: 2 }} />
+
+        <Box display="flex" justifyContent="space-between" mb={1}>
+          <Typography>Ahorrado</Typography>
+          <Typography fontWeight="bold">${formatCurrency(getAhorrado())}</Typography>
+        </Box>
+        <Box display="flex" justifyContent="space-between" mb={1}>
+          <Typography>Total con descuento</Typography>
+          <Typography fontWeight="bold" color="red">${formatCurrency(getDiscount())}</Typography>
+        </Box>
+
       </Box>
 
       {!isDesktop && (

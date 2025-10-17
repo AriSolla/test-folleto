@@ -7,8 +7,9 @@ import type { Product } from "../../models/Flyer";
 
 interface Props{
     product: Product
+    removeIcon?:boolean
 }
-const AddtoCart = ({product}:Props) => {
+const AddtoCart = ({product, removeIcon}:Props) => {
 const { getItemQuantity, addRestQuantity } = useCart();
 
 
@@ -31,18 +32,22 @@ const { getItemQuantity, addRestQuantity } = useCart();
       <div style={{display: "flex", justifyContent:"space-evenly", alignItems:'center'}}>
         {getItemQuantity(product.productPLU) === 0 ? 
           (
-            <div style={{ display: "flex", alignItems: "center", justifyContent: 'center', marginBottom: '7%', marginTop: '5%' }}>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: 'center',  }}>
                 <IconButton 
                     onClick={incrementQuantity}
                     color="error" aria-label="add to shopping cart" 
                 >
-                    <LocalMallIcon />
+                  {!removeIcon ? <LocalMallIcon /> : (
+                    <div style={{background:'red', padding:10, borderRadius:'30px', width:'1000%'}}>
+                      <Typography color="white" fontWeight={600}>Agregar</Typography>
+                    </div>
+                  )}
                 </IconButton>
             </div>
           )
           :
           (
-            <div style={{ display: "flex", alignItems: "center", justifyContent: 'center', marginBottom: '7%', marginTop: '5%', height: '36px' }}>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: 'center',  height: '36px' }}>
               <IconButton
                 onClick={decrementQuantity}
                 aria-label="Decrementar cantidad"

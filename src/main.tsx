@@ -5,16 +5,28 @@ import "./index.css";
 
 import { CartProvider } from "./context/CartContext";
 import { SnackbarProvider } from "./context/SnackbarContext";
-import { FlyerProvider } from "./context/FlyerContext"; // <-- importá acá
+import { FlyerProvider } from "./context/FlyerContext";
 
-ReactDOM.createRoot(document.getElementById("root")!).render(
-  <React.StrictMode>
-    <SnackbarProvider>
-      <FlyerProvider>
-        <CartProvider>
-          <App />
-        </CartProvider>
-      </FlyerProvider>
-    </SnackbarProvider>
-  </React.StrictMode>
-);
+import {
+  CssBaseline,
+} from "@mui/material";
+
+
+function Root() {
+
+
+  return (
+    <React.StrictMode>
+      <SnackbarProvider>
+        <FlyerProvider>
+          <CartProvider>
+              <CssBaseline />
+              <App />
+          </CartProvider>
+        </FlyerProvider>
+      </SnackbarProvider>
+    </React.StrictMode>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById("root")!).render(<Root />);

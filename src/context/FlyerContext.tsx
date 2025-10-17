@@ -18,7 +18,9 @@ interface FlyerContextType {
   departments: Department[];
   productList: Product[];
   isLoading: boolean;
-  loadFlyerData: (data: FlyerData) => void;
+  loadFlyerData: (data: FlyerData, meta:any) => void;
+  flyerDataFull: FlyerData | null;
+  meta: any;
 }
 
 // 2️⃣ Context default + placeholder
@@ -40,6 +42,10 @@ interface FlyerProviderProps {
 
 // 5️⃣ Provider real
 export const FlyerProvider: React.FC<FlyerProviderProps> = ({ children }) => {
+  const [flyerDataFull, setFlyerDataFull] = useState<FlyerData | null>(null);
+
+  const [meta, setMeta] = useState<any>()
+
   const [flyer, setFlyer] = useState<Flyer>({
     flyer_id: "",
     hashtag: "",
@@ -75,7 +81,9 @@ export const FlyerProvider: React.FC<FlyerProviderProps> = ({ children }) => {
   const [productList, setProductList] = useState<Product[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  const loadFlyerData = (data: FlyerData) => {
+  const loadFlyerData = (data: FlyerData, meta?:any) => {
+    setMeta(meta)
+    setFlyerDataFull(data); // <--- guardamos TODO el objeto
     setFlyer(data.flyer);
 
     const activeBusiness = data.business.filter(b => b.active_flyer);
@@ -129,7 +137,9 @@ export const FlyerProvider: React.FC<FlyerProviderProps> = ({ children }) => {
         departments,
         productList,
         isLoading,
-        loadFlyerData
+        loadFlyerData,
+        flyerDataFull,
+        meta
       }}
     >
       {children}

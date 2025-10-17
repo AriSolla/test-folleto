@@ -1,0 +1,22 @@
+{
+   "business_id": "5303",
+      "store_id": "1",
+      "hashtag":"b13d45024081bf158cbab202ac4ae68be07e9425decbd71f7399121f37e5aa02",
+      "address": "Suipacha 1045 - CABA",
+      "phone": "1234567829",
+      "email": "correo@mail.com",
+      "name": "Vineria",
+      "working_hour": "Lunes-Viernes 9hs-22hs",
+      "socialMedia": {
+        "facebook": null,
+        "instagram": null,
+        "x": null
+      },
+      "active_flyer": true,
+      "showCents": false,
+      "includePluWsp": false,
+      "logo_image":"https://rtitec-argentina.nyc3.cdn.digitaloceanspaces.com/folletos/5303/",
+      "products_image":"https://rtitec-argentina.nyc3.cdn.digitaloceanspaces.com/ean",
+      "flyer_url":"https://rtitec-argentina.nyc3.cdn.digitaloceanspaces.com/folletos/5303/folleto.json",
+      "design_url":""
+}

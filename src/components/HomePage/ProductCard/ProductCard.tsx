@@ -1,12 +1,16 @@
 import React from "react";
-import { Box } from "@mui/material";
+import { Box, Typography } from "@mui/material";
 import { styled } from "@mui/system";
 import NormalPriceBadge from "./Badges/NormalPriceBadge";
 import ProductImage from "./ProductImage";
 import type { Product } from "../../../models/Flyer";
+import { fetchProductImage } from "../../../utils/fetchProductImage";
+import { formatCurrency } from "../../../utils/formatPrice";
+import { useFlyer } from "../../../context/FlyerContext";
+import { readMeta } from "../../../services/metaService";
 
 interface ProductCardProps {
-  product: Product
+  product: Product;
   onClick: () => void;
 }
 
@@ -18,8 +22,8 @@ const StyledCard = styled("div")({
   flexDirection: "column", // Alineación horizontal
   justifyContent: "flex-start", // Alineación de los elementos en la fila
   padding: "10px", // Añadir un poco de padding al contenedor
-  paddingRight:'0px',
-  cursor:'pointer',
+  paddingRight: "0px",
+  cursor: "pointer",
   ":hover": {
     transform: "scale(1.1)", // Aumenta el tamaño al 105% (puedes ajustar este valor)
     transition: "transform 0.15s ease-in-out", // Hace que la transición sea suave
@@ -27,58 +31,62 @@ const StyledCard = styled("div")({
 });
 
 const ProductCard = ({ product, onClick }: ProductCardProps) => {
-  
-  const [image, setImage] = React.useState<string>('');
-  const [imageLoading, setImageLoading] = React.useState<boolean>(true); 
+  const [image, setImage] = React.useState<string | undefined>(undefined);
+  const [imageLoading, setImageLoading] = React.useState<boolean>(true);
+  const {business, meta} = useFlyer()
+  const showNetPrice = business.ivaCondition != "Monotributo"
+
   
   React.useEffect(() => {
-    const ean = product.productPLU;
-    const fetchImage = async () => {
-      setImageLoading(true)
-      try {
-        const response = await fetch(`https://pf.rtitec.com.ar/image/image.php?image&ean=${ean}`);
-        if (response.ok) {
-          const data = await response.json();
-          if (data.length > 0) {
-            const imagenData = data[0];            
-            const base64Image = imagenData.image;
-            setImage(base64Image);
-          } else {
-            // console.error(`No se encontro la imagen para el codigo ${ean}`);
-          }
-        } else {
-          console.error(`Error al cargar la imagen con ean ${ean}: `, response.status);
-        }
-      } catch (error) {
-        console.error(`Error en la solicitud para el ean ${ean}:`, error);
-      } finally{
-        setImageLoading(false)
-      }
-    };
-    fetchImage();
-  }, []);
-
+      const fetchUrlMeta = async () => {
+        let metaData: any = await readMeta();
+        if(!metaData) metaData = meta
+        return metaData
+      };
+  
+        const fetchImage = async (ean: string) => {
+          setImageLoading(true);
+          const meta = await fetchUrlMeta();
+          const img = await fetchProductImage(ean, meta);
+          if (img) setImage(img);
+        setImageLoading(false);
+      };
+      fetchImage(product.productPLU);
+    }, []);
+    
   return (
     <StyledCard onClick={onClick}>
       <Box sx={{ position: "relative" }}>
         {/* Imagen */}
-        <ProductImage image={image} productName={product.productName} imageLoading={imageLoading} setImageLoading={setImageLoading}/>
-      
+        <ProductImage
+          image={image}
+          productName={product.productName}
+          imageLoading={imageLoading}
+          setImageLoading={setImageLoading}
+        />
+
         {/* Contenedor con precio y detalles */}
-        <NormalPriceBadge product={product}/>
-        
+        <NormalPriceBadge product={product} />
+
         {/* Nombre */}
-        <div>
-            <h5 style={{
-              fontSize: '0.9rem', 
-              color: 'black', 
-              margin: '0px', 
-              fontWeight: '700',
-              padding: '0px 3px', 
-              marginBottom:'30px'
-              }}>
-                {product.productName}
-              </h5>
+        <div style={{ marginBottom: "20px" }}>
+          <h5
+            style={{
+              fontSize: "0.9rem",
+              color: "black",
+              margin: "0px",
+              fontWeight: "700",
+              padding: "0px 3px",
+              marginBottom: "0",
+            }}
+          >
+            {product.productName}
+          </h5>
+          {showNetPrice && (
+            <Typography variant="subtitle2" color="text.secondary">
+              Precio sin IVA: ${formatCurrency(product.NetPrice)}
+            </Typography>
+          )}
         </div>
       </Box>
     </StyledCard>

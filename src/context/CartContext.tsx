@@ -2,6 +2,7 @@ import { createContext, useContext, useEffect, useState } from "react";
 import type { ReactNode } from "react";
 import type { Product } from "../models/Flyer";
 import { useFlyer } from "./FlyerContext";
+import { getPriceSelected } from "../utils/getPriceSelected";
 
 interface CartContextType {
   cartItems: Product[];
@@ -32,18 +33,23 @@ export const useCart = () => {
 };
 
 export function CartProvider({ children }: { children: ReactNode }) {
-  const { productList } = useFlyer();
+  const { productList, business } = useFlyer();
   const [cartItems, setCartItems] = useState<Product[]>([]);
   const [hasInitializedCart, setHasInitializedCart] = useState(false);
+  
 
   //Carga nuevamente los items de la session al carrito
   useEffect(() => {
     const saved = sessionStorage.getItem("cart");
+    if (!saved) {
+      setHasInitializedCart(true); // nada guardado, ya está
+      return;
+    }
 
-    if (!saved || productList.length === 0) return;
-    const parsed = JSON.parse(saved);
+    if (productList.length === 0) return; // todavía no tengo productos, espero
 
     try {
+      const parsed = JSON.parse(saved);
       const fullItems = parsed
         .map(({ plu, cartQuantity }: { plu: string; cartQuantity: number }) => {
           const product = productList.find((p) => p.productPLU === plu);
@@ -53,12 +59,16 @@ export function CartProvider({ children }: { children: ReactNode }) {
         .filter(Boolean);
 
       setCartItems(fullItems);
-      setHasInitializedCart(true);
     } catch (e) {
       sessionStorage.removeItem("cart");
       console.error("Error al cargar carrito:", e);
+    } finally {
+      // ✅ recién acá lo marcamos como inicializado
+      setHasInitializedCart(true);
     }
   }, [productList]);
+
+
 
   //Guardo al session los productos sin exponer datos sensibles en el navegador
   useEffect(() => {
@@ -176,21 +186,23 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const getTotalPrice = () => {
     let contador = 0;
     cartItems.map((item) => {
-      let price;
-      if (item.isPromo && item.isPromo === "S") price = item.precioPromo;
-      else price = item.precioVenta;
-
-      contador += item.cartQuantity! * price;
+      contador += item.cartQuantity! * getPriceSelected(item, business.price_default);
     });
     return contador;
   };
 
   const getProductListString = () => {
+    let showPlu = business.includePluWsp || false
     let list = "";
 
     cartItems.map((item) => {
-      list += `- ${item.productName} x${item.cartQuantity} (c/u$${item.precioVenta})\n`;
+      if(showPlu) list += `*${item.productPLU}*\n- *${item.productName}* ${item.productDesc} ${item.quantity}${item.typeUnit} x${item.cartQuantity} (c/u$${getPriceSelected(item, business.price_default)})\n`;
+      
+      else list += `- *${item.productName}* ${item.productDesc} ${item.quantity}${item.typeUnit} x${item.cartQuantity} (c/u$${getPriceSelected(item, business.price_default)})\n`;
+
+
     });
+    list +=`*Total: $${getTotalPrice()}*\n`
     return list;
   };
 

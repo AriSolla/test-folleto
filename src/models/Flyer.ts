@@ -4,7 +4,9 @@ export interface Flyer {
   expired_date: string; 
   valid_date: string;   
   comment: string;
+  notice?: any;
   banners: Banners | null;
+
 }
 
 //Banners
@@ -32,10 +34,13 @@ export interface Business {
   phone: string;
   email: string;
   name: string;
-  working_hour: string;
+  working_hour: any; // object
   socialMedia: SocialMedia | null;
   active_flyer: boolean;
-  logo_image: string;   // Puede ser base64 o URL
+  includePluWsp?: boolean,
+  ivaCondition?: string,
+  price_default?: string,
+  logo_image: string;   // 
 }
 
 export interface SocialMedia {
@@ -63,7 +68,8 @@ export interface Group {
 export interface Product {
   productPLU: string;
   productName: string;
-  updatedAt: string;         // Si lo querés parsear, podés usar Date
+  productDesc: string;
+  updatedAt: string;         
   precioVenta: number;
   departCode: number;
   precioPromo: number;
@@ -72,7 +78,10 @@ export interface Product {
   style?: ProductStyle;
   promoDetails?: any;
   cartQuantity?: number;
-  isPromo?: string;
+  typeUnit: string,
+  quantity: number,
+  priceunit: number,
+  NetPrice: number, //precio sin Iva
 
 }
 

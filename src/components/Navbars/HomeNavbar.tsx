@@ -5,8 +5,10 @@ import { Badge, IconButton, TextField } from '@mui/material';
 import MenuIcon from "@mui/icons-material/Menu";
 import LocalMallIcon from '@mui/icons-material/LocalMall';
 import { useNavigate } from 'react-router-dom';
-import { useFlyer } from '../../context/FlyerContext';
 import { useCart } from '../../context/CartContext';
+import { readMeta } from '../../services/metaService';
+import React from 'react';
+import { useFlyer } from '../../context/FlyerContext';
 
 interface NavbarProps {
   search: string;
@@ -20,9 +22,20 @@ export default function HomeNavbar({
   setSearch,
   onMenuClick
 }: NavbarProps) {
-    const {business} = useFlyer();
     const {getTotalItems} = useCart();
+    const {meta, business} = useFlyer()
     const navigate = useNavigate()
+    const [logo, setLogo] = React.useState<string| undefined>(undefined);
+
+    React.useEffect(() => {
+      const fetchLogo = async () => {
+        let metaData: any = await readMeta();
+        if(!metaData) metaData = meta
+        const url = `${metaData.logo_image}${business.logo_image}`
+        setLogo(url || "");
+      };
+      fetchLogo();
+    }, []);
 
   return (
     <div style={{marginBottom:100}}>
@@ -32,9 +45,9 @@ export default function HomeNavbar({
             <div style={{ display: 'flex', alignItems: 'center' }}>
               <div style={{ marginRight: '20px' }}>
                 <img
-                  src={business?.logo_image}
+                  src={logo}
                   alt="Logo"
-                  style={{ height: '40px' }}
+                  style={{ height: '50px' }}
                 />
               </div>
               <IconButton style={{ borderLeft: 'solid 1px white', borderRadius: '0' }} onClick={onMenuClick}>

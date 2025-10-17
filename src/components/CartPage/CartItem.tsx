@@ -1,9 +1,4 @@
-import {
-  Box,
-  Typography,
-  IconButton,
-  Divider,
-} from "@mui/material";
+import { Box, Typography, IconButton, Divider } from "@mui/material";
 import DeleteIcon from "@mui/icons-material/Delete";
 import type { Product } from "../../models/Flyer";
 import React from "react";
@@ -12,6 +7,11 @@ import QuantitySelector from "./QuantitySelector";
 import { useCart } from "../../context/CartContext";
 import DeleteProductDialog from "./Dialogs/DeleteProductDialog";
 import { useSnackbar } from "../../context/SnackbarContext";
+import { formatCurrency } from "../../utils/formatPrice";
+import { fetchProductImage } from "../../utils/fetchProductImage";
+import { getPriceSelected } from "../../utils/getPriceSelected";
+import { useFlyer } from "../../context/FlyerContext";
+import { readMeta } from "../../services/metaService";
 
 interface Props {
   item: Product;
@@ -19,46 +19,35 @@ interface Props {
 
 export default function CartItem({ item }: Props) {
   const { increaseQuantity, decreaseQuantity, removeFromCart } = useCart();
-  const {showMessage} = useSnackbar()
+  const {business, meta} = useFlyer()
+  const { showMessage } = useSnackbar();
   const [imageLoading, setImageLoading] = React.useState<boolean>(true);
   const [image, setImage] = React.useState<string | undefined>(undefined);
-  
+
   const [openDialog, setOpenDialog] = React.useState<boolean>(false);
 
+  const precioDefault = getPriceSelected(item, business.price_default)
 
   const borrarProducto = () => {
-    removeFromCart(item.productPLU)
-    setOpenDialog(false)
-    showMessage("Producto borrado del carrito exitosamente.", "info")
-  }
-
-  const fetchImage = async (ean: string) => {
-    setImageLoading(true);
-    try {
-      const response = await fetch(
-        `https://pf.rtitec.com.ar/image/image.php?image&ean=${ean}`
-      );
-      if (response.ok) {
-        const data = await response.json();
-        if (data.length > 0) {
-          const imagenData = data[0];
-          const base64Image = imagenData.image;
-          setImage(base64Image);
-        }
-      } else {
-        console.error(
-          `Error al cargar la imagen con ean ${ean}: `,
-          response.status
-        );
-      }
-    } catch (error) {
-      console.error(`Error en la solicitud para el ean ${ean}:`, error);
-    } finally {
-      setImageLoading(false);
-    }
+    removeFromCart(item.productPLU);
+    setOpenDialog(false);
+    showMessage("Producto borrado del carrito exitosamente.", "info");
   };
-
+    
   React.useEffect(() => {
+    const fetchUrlMeta = async () => {
+      let metaData: any = await readMeta();
+      if(!metaData) metaData = meta
+      return metaData
+    };
+
+      const fetchImage = async (ean: string) => {
+        setImageLoading(true);
+        const meta = await fetchUrlMeta();
+        const img = await fetchProductImage(ean, meta);
+        if (img) setImage(img);
+      setImageLoading(false);
+    };
     fetchImage(item.productPLU);
   }, []);
 
@@ -89,7 +78,12 @@ export default function CartItem({ item }: Props) {
             flexShrink: 0,
           }}
         >
-          <ProductImage src={image} alt={item.productName} imageLoading={imageLoading} setImageLoading={setImageLoading} />
+          <ProductImage
+            src={image}
+            alt={item.productName}
+            imageLoading={imageLoading}
+            setImageLoading={setImageLoading}
+          />
         </Box>
 
         {/* Contenido */}
@@ -122,7 +116,13 @@ export default function CartItem({ item }: Props) {
               </Typography>
             </Box>
 
-            <IconButton color="error" size="small" onClick={()=>{setOpenDialog(true)}}>
+            <IconButton
+              color="error"
+              size="small"
+              onClick={() => {
+                setOpenDialog(true);
+              }}
+            >
               <DeleteIcon />
             </IconButton>
           </Box>
@@ -139,7 +139,7 @@ export default function CartItem({ item }: Props) {
             }}
           >
             <Typography variant="body2" color="text.secondary">
-              ${item.precioVenta.toFixed(0)}
+              ${formatCurrency(precioDefault)}
             </Typography>
 
             <QuantitySelector
@@ -154,17 +154,19 @@ export default function CartItem({ item }: Props) {
             />
 
             <Typography variant="body1" fontWeight={800} color="green">
-              ${(item.precioVenta * item.cartQuantity!).toFixed(0)}
+              ${formatCurrency((precioDefault * item.cartQuantity!))}
             </Typography>
           </Box>
         </Box>
       </Box>
 
       <Divider sx={{ mt: 2 }} />
-      
+
       <DeleteProductDialog
         openDialog={openDialog}
-        handleCloseDialog={()=>{setOpenDialog(false)}}
+        handleCloseDialog={() => {
+          setOpenDialog(false);
+        }}
         handleDeleteItem={borrarProducto}
         productToDelete={item}
       />

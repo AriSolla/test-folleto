@@ -20,7 +20,7 @@ const StyledCircularProgress = styled('div')({
 });
 
 interface ImageCardProps {
-  image: string;
+  image: string | undefined;
   productName: string;
   imageLoading: boolean;
   setImageLoading: (value: boolean) => void;

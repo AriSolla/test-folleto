@@ -15,6 +15,8 @@ import ExpandLess from "@mui/icons-material/ExpandLess";
 import ExpandMore from "@mui/icons-material/ExpandMore";
 
 import type { Group, Department } from "../../models/Flyer";
+import { useFlyer } from "../../context/FlyerContext";
+import { readMeta } from "../../services/metaService";
 
 interface HomeDrawerProps {
   open: boolean;
@@ -37,6 +39,8 @@ export default function HomeDrawer({
 }: HomeDrawerProps) {
   const theme = useTheme();
   const [openGroup, setOpenGroup] = useState<string | null>(null);
+  const {meta} = useFlyer()
+  const [urlBase, setUrlBase] = React.useState<string>("");
 
   // Seleccionar grupo: se dispara cuando hago click en el texto o ícono del grupo
   const handleGroupClick = (group: Group) => {
@@ -59,6 +63,16 @@ export default function HomeDrawer({
     event.stopPropagation(); // evitar que el click "suba" y active handleGroupClick
     setOpenGroup(openGroup === groupId ? null : groupId);
   };
+
+  
+      React.useEffect(() => {
+        const fetchUrlMeta = async () => {
+          let metaData: any = await readMeta();
+          if(!metaData) metaData = meta
+          setUrlBase(metaData.logo_image);
+        };
+        fetchUrlMeta();
+      }, []);
 
   return (
     <Drawer anchor="left" open={open} onClose={onClose}>
@@ -111,7 +125,7 @@ export default function HomeDrawer({
                       }}
                     >
                       <img
-                        src={group.icon}
+                        src={`${urlBase}${group.icon}`}
                         alt="Icon"
                         style={{ width: 24, height: 24 }}
                       />

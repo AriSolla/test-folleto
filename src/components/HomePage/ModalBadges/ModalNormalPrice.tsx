@@ -1,7 +1,12 @@
 import {Box} from '@mui/material'
 import type { ModalBadgesProps } from '../ModalBadges';
+import { formatCurrency } from '../../../utils/formatPrice';
+import { getPriceSelected } from '../../../utils/getPriceSelected';
+import { useFlyer } from '../../../context/FlyerContext';
 
-const ModalNormalPrice = ({product, cents}:ModalBadgesProps) => {
+const ModalNormalPrice = ({product}:ModalBadgesProps) => {
+    const {business} = useFlyer()
+    const precioDefault = getPriceSelected(product, business.price_default)
     
   return (
     <Box>
@@ -15,7 +20,7 @@ const ModalNormalPrice = ({product, cents}:ModalBadgesProps) => {
                     <span style={{fontSize: '2.5rem',
                                 fontWeight: 'bold',
                                 padding: '0px 5px'}}>
-                            {product.precioVenta.toFixed(cents)}
+                            {formatCurrency(precioDefault)}
                     </span>
                     <span>c/u</span>
                 </div>
