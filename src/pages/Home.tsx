@@ -98,7 +98,7 @@ export default function Home() {
   };
 
   return (
-    <Box sx={{display: "flex", flexDirection: "column", minHeight: "100vh", background:'red'}}>
+    <Box sx={{display: "flex", flexDirection: "column", minHeight: "100vh", background:'yellow'}}>
 
       <HomeNavbar
         search={searchTerm}
